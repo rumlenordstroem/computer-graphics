@@ -9,19 +9,19 @@ export function drawRectangle(startX : number, startY : number, stopX : number, 
   ];
 }
 
-export function colorRectangle(r : number, g : number, b : number) : number[] {
+export function colorRectangle(r : number, g : number, b : number, a : number) : number[] {
   return [
-    r, g, b,
-    r, g, b,
-    r, g, b,
-    r, g, b,
-    r, g, b,
-    r, g, b,
+    r, g, b, a,
+    r, g, b, a,
+    r, g, b, a,
+    r, g, b, a,
+    r, g, b, a,
+    r, g, b, a,
   ];
 }
 
-export function drawCircle(radius: number, x: number, y: number, n : number = 100) : number[] {
-  let circle : number[] = [0.0, 0.0];
+export function drawCircle(radius: number, x: number, y: number, n : number = 50) : number[] {
+  let circle : number[] = [x, y];
   
   for (let i : number = 0; i <= n; i++) {
       const angle : number = (i / n) * 2 * Math.PI;
@@ -39,3 +39,24 @@ export function drawCircle(radius: number, x: number, y: number, n : number = 10
   return circle;
 }
 
+export function colorCircle(r: number, g: number, b: number, n : number = 50) : number[] {
+  let colors : number[] = [r, g, b];
+
+  for (let i : number = 0; i <= n; i++) {
+    colors.push(r);
+    colors.push(g);
+    colors.push(b);
+    colors.push(r);
+    colors.push(g);
+    colors.push(b);
+    colors.push(r);
+    colors.push(g);
+    colors.push(b);
+  }
+
+  colors.pop();
+  colors.pop();
+  colors.pop();
+
+  return colors;
+}
