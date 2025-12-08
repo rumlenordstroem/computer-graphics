@@ -1,31 +1,11 @@
-struct Uniforms {
-    value: f32,
-    _pad: vec3<f32>,
-};
-
-@group(0) @binding(0) var<uniform> uniforms : Uniforms;
-
-struct VSOut {
-    @builtin(position) position: vec4f,
-    @location(0) color: vec3f,
-};
-
 @vertex
-fn main_vs(@location(0) pos: vec2f, @location(1) color: vec3f) -> VSOut
+fn main_vs(@location(0) pos: vec2f) -> @builtin(position) vec4f
 {
-    var vsOut: VSOut;
-    vsOut.color = color;
-    vsOut.position = vec4f(
-        pos[0],
-        pos[1] + uniforms.value,
-        0.0,
-        1.0
-    );
-    return vsOut;
+    return vec4f(pos, 0, 1);
 }
 
 @fragment
-fn main_fs(@location(0) inColor: vec3f) -> @location(0) vec4f
+fn main_fs() -> @location(0) vec4f
 {
-    return vec4f(inColor, 1.0);
+    return vec4f(0.0, 0.0, 0.0, 1.0);
 }
