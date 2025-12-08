@@ -9,6 +9,17 @@ export function drawRectangle(startX : number, startY : number, stopX : number, 
   ];
 }
 
+export function colorRectangle(r : number, g : number, b : number) : number[] {
+  return [
+    r, g, b,
+    r, g, b,
+    r, g, b,
+    r, g, b,
+    r, g, b,
+    r, g, b,
+  ];
+}
+
 export function drawCircle(radius: number, x: number, y: number, n : number = 100) : number[] {
   let circle : number[] = [0.0, 0.0];
   

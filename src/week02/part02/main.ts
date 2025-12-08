@@ -2,7 +2,7 @@
 window.onload = function() { main(); }
 
 import shader from "./shader.wgsl?raw";
-import { drawRectangle } from "../../common/utils";
+import { colorRectangle, drawRectangle } from "../../common/utils";
 
 const main= async() =>
 {
@@ -23,6 +23,25 @@ const main= async() =>
   var bufferIndex : number = 0;
   let vertices: number[] = [];
   let colors: number[] = [];
+  const colorSelect : HTMLInputElement = <HTMLInputElement> document.getElementById("color-select");
+  const clearSelect: HTMLInputElement = <HTMLInputElement> document.getElementById("clear-select");
+  const colorLookup : number[][] = [
+    [1.0, 1.0, 1.0, 1.0], // White
+    [0.0, 0.0, 0.0, 1.0], // Black
+    [1.0, 0.0, 0.0, 1.0], // Red
+    [0.0, 1.0, 0.0, 1.0], // Green
+    [0.0, 0.0, 1.0, 1.0], // Blue
+    [1.0, 1.0, 0.0, 1.0], // Yellow
+    [1.0, 0.647, 0.0, 1.0], // Orange
+    [0.3921, 0.5843, 0.9294, 1.0] // Cornflower
+  ];
+
+  <HTMLInputElement> document.getElementById("clear-button").onclick = function () {
+    vertices = [];
+    colors = [];
+    bufferIndex = 0;
+    requestAnimationFrame(clear);
+  };
 
   const vertexBuffer : GPUBuffer = device.createBuffer({
     label: "Cell vertices",
@@ -87,19 +106,33 @@ const main= async() =>
     const x : number = 2 * (ev.clientX - rect.left) / canvas.width - 1;
     const y : number = 2 * (canvas.height - ev.clientY + rect.top - 1) / canvas.height - 1;
     vertices.push(...drawRectangle(x, y, x + 0.020, y + 0.020));
+    colors.push(...colorRectangle(colorLookup[colorSelect.value][0], colorLookup[colorSelect.value][1], colorLookup[colorSelect.value][2]))
     requestAnimationFrame(render);
     bufferIndex = bufferIndex + 6;
   });
 
+  function clear () {
+    const descriptor : GPURenderPassDescriptor = {
+      colorAttachments: [{
+        view: context.getCurrentTexture().createView(),
+        loadOp: 'clear',
+        storeOp: 'store',
+        clearValue: colorLookup[clearSelect.value],
+      }],
+    }
+    const encoder : GPUCommandEncoder = device.createCommandEncoder();
+    const pass : GPURenderPassEncoder = encoder.beginRenderPass(descriptor);
+
+    pass.end();
+    device.queue.submit([encoder.finish()]);
+  }
+
   // Create a render pass in a command buffer and submit it
   function render (){
 
-    // for (let i = 0; i < array.length; i++) {
-    //   vertices[i] = array[i];
-    // }
-
     if (vertices.length > 0) {
       device.queue.writeBuffer(vertexBuffer, 0, new Float32Array(vertices));
+      device.queue.writeBuffer(colorsBuffer, 0, new Float32Array(colors));
     }
 
     const descriptor : GPURenderPassDescriptor = {
@@ -107,7 +140,7 @@ const main= async() =>
         view: context.getCurrentTexture().createView(),
         loadOp: 'clear',
         storeOp: 'store',
-        clearValue: { r: 0.3921, g: 0.5843, b: 0.9294, a: 1.0 },
+        clearValue: colorLookup[clearSelect.value],
       }],
     }
     const encoder : GPUCommandEncoder = device.createCommandEncoder();
@@ -120,6 +153,5 @@ const main= async() =>
     pass.end();
     device.queue.submit([encoder.finish()]);
   }
-
-  requestAnimationFrame(render);
+  clear();
 }
