@@ -79,7 +79,6 @@ const main= async() =>
     fragment: {
       module: wgsl,
       entryPoint: 'main_fs',
-      buffers: [colorsBufferLayout],
       targets: [{
         format: format }],
     },
