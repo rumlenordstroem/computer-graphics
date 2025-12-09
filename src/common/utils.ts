@@ -39,21 +39,25 @@ export function drawCircle(radius: number, x: number, y: number, n : number = 50
   return circle;
 }
 
-export function colorCircle(r: number, g: number, b: number, n : number = 50) : number[] {
-  let colors : number[] = [r, g, b];
+export function colorCircle(r: number, g: number, b: number, a: number, n : number = 50) : number[] {
+  let colors : number[] = [r, g, b, a];
 
   for (let i : number = 0; i <= n; i++) {
     colors.push(r);
     colors.push(g);
     colors.push(b);
+    colors.push(a);
     colors.push(r);
     colors.push(g);
     colors.push(b);
+    colors.push(a);
     colors.push(r);
     colors.push(g);
     colors.push(b);
+    colors.push(a);
   }
 
+  colors.pop();
   colors.pop();
   colors.pop();
   colors.pop();

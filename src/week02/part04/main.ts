@@ -38,8 +38,12 @@ const main= async() =>
   let triangleBufferIndex : number = 0;
   let triangleBuffer : number[] = Array(6);
 
+  let circleOriginBuffer : number[] = [];
+
   <HTMLInputElement> document.getElementById("clear-button").onclick = function () {
     bufferIndex = 0;
+    triangleBufferIndex = 0;
+    circleOriginBuffer = [];
     requestAnimationFrame(clear);
   };
 
@@ -133,6 +137,26 @@ const main= async() =>
           triangleBufferIndex += 2;
         }
         break; 
+      }
+
+      // Circle
+      case '2': {
+        if (circleOriginBuffer.length == 2) {
+          const n = 20;
+          const radius : number = Math.sqrt(((circleOriginBuffer[0] - x)*(circleOriginBuffer[0] - x)) + ((circleOriginBuffer[1] - y)*(circleOriginBuffer[1] - y)));
+          const circle: number[] = drawCircle(radius, circleOriginBuffer[0], circleOriginBuffer[1], n);
+          const colors : number[] = colorCircle(rgb[0],rgb[1],rgb[2],rgb[3], n);
+          device.queue.writeBuffer(vertexBuffer, bufferIndex * 8, new Float32Array(circle));
+          device.queue.writeBuffer(colorsBuffer, bufferIndex * 16, new Float32Array(colors));
+          bufferIndex += 3 * (n + 1);
+          circleOriginBuffer = [];
+          requestAnimationFrame(render);
+        } else {
+          circleOriginBuffer.push(x);
+          circleOriginBuffer.push(y);
+        }
+        break; 
+        
       }
 
       default: { 
