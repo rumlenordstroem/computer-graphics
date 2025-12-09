@@ -82,22 +82,43 @@ const main= async() =>
   };
 
   // matrix
-  const uniformBufferSize = 16 * 4;
+  const uniformBufferSize = 16 * 4 * 3;
   const uniformBuffer : GPUBuffer = device.createBuffer({
     label: 'uniforms',
     size: uniformBufferSize,
     usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
   });
 
-  // const uniformValues = new Float32Array(uniformBufferSize / 4);
-  const uniformValues = new Float32Array(16);
+  const uniformValues = new Float32Array(uniformBufferSize / 4);
   const view = new Float32Array(16);
 
-  mat4.projection(2,2,2,uniformValues);
-  mat4.translate(uniformValues,[1.0, 1.0, 0.0], uniformValues);
-  mat4.lookAt([0.0, 0.0 , 0.0],[1.0, 1.0, 1.0],[0.0, 1.0, 0.0], view);
-  mat4.multiply(uniformValues,view,uniformValues);
+  const degToRad = d => d * Math.PI / 180;
 
+  const matrixValues : Float32Array[] = [
+    new Float32Array(16),
+    new Float32Array(16),
+    new Float32Array(16),
+  ];
+
+  const aspect = canvas.clientWidth / canvas.clientHeight;
+
+  mat4.perspective(degToRad(45),aspect,0,10,matrixValues[0],);
+  mat4.lookAt([0.0, 0.0 , 0.0],[0.0, 0.0, 1.0],[0.0, 1.0, 0.0], view);
+  mat4.multiply(matrixValues[0],view,matrixValues[0]);
+  mat4.translate(matrixValues[0],[-0.5, -0.5, 3.0], matrixValues[0]);
+
+  mat4.copy(matrixValues[0], matrixValues[1]);
+  mat4.translate(matrixValues[1],[-1.5, 0.0, 0.0], matrixValues[1]);
+  mat4.rotateY(matrixValues[1], Math.PI / 8, matrixValues[1]);
+
+  mat4.copy(matrixValues[0], matrixValues[2]);
+  mat4.translate(matrixValues[2],[2.0, 0.5, 0.0], matrixValues[2]);
+  mat4.rotateY(matrixValues[2], (Math.PI / 16) * 30, matrixValues[2]);
+  mat4.rotateX(matrixValues[2], Math.PI / 4, matrixValues[2]);
+
+  for (let i = 0; i < matrixValues.length; i++) {
+    device.queue.writeBuffer(uniformBuffer, i * 16 * 4, new Float32Array(matrixValues[i]));
+  }
   const wgsl : GPUShaderModule = device.createShaderModule({
     label: "Cell shader",
     code: shader
@@ -134,10 +155,19 @@ const main= async() =>
     ],
   });
 
+  const settings = {
+    translation: [0, 0, 0],
+  };
+
+  // const gui = new GUI();
+  // gui.onChange(render);
+  // gui.add(settings.translation, '0', -3, 3).name('translation.x');
+  // gui.add(settings.translation, '1', -3, 3).name('translation.y');
+  // gui.add(settings.translation, '2', -3, 3).name('translation.z');
+
   // Create a render pass in a command buffer and submit it
   function render (){
-    device.queue.writeBuffer(uniformBuffer, 0, new Float32Array(uniformValues));
-
+    // mat4.translate(uniformValues, settings.translation, uniformValues);
     const descriptor : GPURenderPassDescriptor = {
       colorAttachments: [{
         view: context.getCurrentTexture().createView(),
@@ -155,7 +185,7 @@ const main= async() =>
     pass.setVertexBuffer(1, colorsBuffer);
 
     pass.setBindGroup(0, bindGroup);
-    pass.drawIndexed(wire_indices.length);
+    pass.drawIndexed(wire_indices.length, 3);
     pass.end();
     device.queue.submit([encoder.finish()]);
 
