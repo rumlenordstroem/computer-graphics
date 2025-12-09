@@ -13,7 +13,7 @@ struct VSOut {
 fn main_vs(@location(0) position: vec4f, @location(1) color: vec4f) -> VSOut
 {
     var output: VSOut;
-    output.position = position;
+    output.position = uni.matrix * position;
     output.color = color;
     return output;
 }
