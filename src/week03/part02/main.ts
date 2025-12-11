@@ -90,11 +90,28 @@ const main= async() =>
   });
 
   const uniformValues = new Float32Array(uniformBufferSize / 4);
-  const view = new Float32Array(16);
 
   const degToRad = d => d * Math.PI / 180;
 
-  const matrixValues : Float32Array[] = [
+  const projections : Float32Array[] = [
+    new Float32Array(16),
+    new Float32Array(16),
+    new Float32Array(16),
+  ];
+
+  const views : Float32Array[] = [
+    new Float32Array(16),
+    new Float32Array(16),
+    new Float32Array(16),
+  ];
+
+  const models : Float32Array[] = [
+    new Float32Array(16),
+    new Float32Array(16),
+    new Float32Array(16),
+  ];
+
+  const mvp : Float32Array[] = [
     new Float32Array(16),
     new Float32Array(16),
     new Float32Array(16),
@@ -102,22 +119,31 @@ const main= async() =>
 
   const aspect = canvas.clientWidth / canvas.clientHeight;
 
-  mat4.perspective(degToRad(45),aspect,0,10,matrixValues[0],);
-  mat4.lookAt([0.0, 0.0 , 0.0],[0.0, 0.0, 1.0],[0.0, 1.0, 0.0], view);
-  mat4.multiply(matrixValues[0],view,matrixValues[0]);
-  mat4.translate(matrixValues[0],[-0.5, -0.5, 3.0], matrixValues[0]);
+  mat4.perspective(degToRad(45),aspect,0.1,10,projections[0]);
+  mat4.lookAt([0.5, 0.5, 4.0],[0.5, 0.5, 0.5],[0.0, 1.0, 0.0], views[0]);
+  mat4.identity(models[0])
+  mat4.translate(models[0], [-1.5, 0.0, 0.0], models[0]);
+  mat4.multiply(projections[0],views[0],mvp[0]);
+  mat4.multiply(mvp[0],models[0],mvp[0]);
 
-  mat4.copy(matrixValues[0], matrixValues[1]);
-  mat4.translate(matrixValues[1],[-1.5, 0.0, 0.0], matrixValues[1]);
-  mat4.rotateY(matrixValues[1], Math.PI / 8, matrixValues[1]);
+  mat4.perspective(degToRad(45),aspect,0.1,10,projections[1]);
+  mat4.lookAt([0.5, 0.5, 4.0],[0.5, 0.5, 0.5],[0.0, 1.0, 0.0], views[1]);
+  mat4.identity(models[1])
+  mat4.rotateY(models[1], Math.PI / 4.25, models[1]);
+  mat4.multiply(projections[1],views[1],mvp[1]);
+  mat4.multiply(mvp[1],models[1],mvp[1]);
 
-  mat4.copy(matrixValues[0], matrixValues[2]);
-  mat4.translate(matrixValues[2],[2.0, 0.5, 0.0], matrixValues[2]);
-  mat4.rotateY(matrixValues[2], (Math.PI / 16) * 30, matrixValues[2]);
-  mat4.rotateX(matrixValues[2], Math.PI / 4, matrixValues[2]);
+  mat4.perspective(degToRad(45),aspect,0.1,10,projections[2]);
+  mat4.lookAt([0.5, 0.5, 4.0],[0.5, 0.5, 0.5],[0.0, 1.0, 0.0], views[2]);
+  mat4.identity(models[2])
+  mat4.translate(models[2], [1.5, 0.5, 0.0], models[2]);
+  mat4.rotateY(models[2], Math.PI / 8, models[2]);
+  mat4.rotateX(models[2], Math.PI / 4, models[2]);
+  mat4.multiply(projections[2],views[2],mvp[2]);
+  mat4.multiply(mvp[2],models[2],mvp[2]);
 
-  for (let i = 0; i < matrixValues.length; i++) {
-    device.queue.writeBuffer(uniformBuffer, i * 16 * 4, new Float32Array(matrixValues[i]));
+  for (let i = 0; i < mvp.length; i++) {
+    device.queue.writeBuffer(uniformBuffer, i * 16 * 4, new Float32Array(mvp[i]));
   }
   const wgsl : GPUShaderModule = device.createShaderModule({
     label: "Cell shader",
@@ -159,12 +185,6 @@ const main= async() =>
     translation: [0, 0, 0],
   };
 
-  // const gui = new GUI();
-  // gui.onChange(render);
-  // gui.add(settings.translation, '0', -3, 3).name('translation.x');
-  // gui.add(settings.translation, '1', -3, 3).name('translation.y');
-  // gui.add(settings.translation, '2', -3, 3).name('translation.z');
-
   // Create a render pass in a command buffer and submit it
   function render (){
     // mat4.translate(uniformValues, settings.translation, uniformValues);
@@ -185,7 +205,7 @@ const main= async() =>
     pass.setVertexBuffer(1, colorsBuffer);
 
     pass.setBindGroup(0, bindGroup);
-    pass.drawIndexed(wire_indices.length, 3);
+    pass.drawIndexed(wire_indices.length, mvp.length);
     pass.end();
     device.queue.submit([encoder.finish()]);
 
