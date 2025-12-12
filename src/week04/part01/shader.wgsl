@@ -10,11 +10,11 @@ struct VSOut {
 };
 
 @vertex
-fn main_vs(@location(0) position: vec4f, @location(1) color: vec4f, @builtin(instance_index) instance: u32) -> VSOut
+fn main_vs(@location(0) position: vec4f, @builtin(instance_index) instance: u32) -> VSOut
 {
     var output: VSOut;
     output.position = uni.matrix[instance] * position;
-    output.color = color;
+    output.color = vec4(1.0, 1.0, 1.0, 1.0);
     return output;
 }
 
