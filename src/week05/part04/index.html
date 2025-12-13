@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Week 5 part 4</title>
+  <script type="module" src="./main.ts"></script>
+</head>
+<body>
+ <div class="row">
+  <div class="column">
+    <canvas id="gpu-canvas" width="512" height="512"></canvas>
+  </div>
+  <div class="column">
+    <div class="slidecontainer">
+      <p>Emitted radiance (L_e):</p>
+      <input type="range" min="0.0" max="2.0" value="1.0" step="0.1" class="slider" id="emittedRadiance">
+
+      <p>Ambient radiance (L_a):</p>
+      <input type="range" min="0.0" max="1.0" value="0.1" step="0.1" class="slider" id="ambientRadiance">
+
+      <p>Diffuse coefficient (k_d):</p>
+      <input type="range" min="0.0" max="1.0" value="0.8" step="0.1" class="slider" id="diffuseCoefficient">
+
+      <p>Specular coefficient (k_s):</p>
+      <input type="range" min="0.0" max="1.0" value="1.0" step="0.1" class="slider" id="specularCoefficient">
+
+      <p>Shininess (s):</p>
+      <input type="range" min="0.0" max="1000.0" value="10.0" step="1.0" class="slider" id="shininess">
+
+      <p>Rotation speed:</p>
+      <input type="range" min="0.0" max="0.2" value="0.01" step="0.01" class="slider" id="rotationSpeed">
+    </div>
+  </div>
+</div> 
+</body>
+</html>
