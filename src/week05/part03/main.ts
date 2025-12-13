@@ -18,35 +18,8 @@ const main= async() =>
   };
   context.configure(configuration);
 
-  const emittedRadianceSlider : HTMLInputElement = <HTMLInputElement> document.getElementById('emittedRadiance');
-  const ambientRadianceSlider : HTMLInputElement = <HTMLInputElement> document.getElementById('ambientRadiance');
-  const diffuseCoefficientSlider : HTMLInputElement = <HTMLInputElement> document.getElementById('diffuseCoefficient');
-  const specularCoefficientSlider : HTMLInputElement = <HTMLInputElement> document.getElementById('specularCoefficient');
-  const shininessSlider : HTMLInputElement = <HTMLInputElement> document.getElementById('shininess');
   const rotationSpeedSlider : HTMLInputElement = <HTMLInputElement> document.getElementById('rotationSpeed');
-
-  var emittedRadiance : number = parseFloat(emittedRadianceSlider.value);
-  var ambientRadiance : number = parseFloat(ambientRadianceSlider.value);
-  var diffuseCoefficient : number = parseFloat(diffuseCoefficientSlider.value);
-  var specularCoefficient : number = parseFloat(specularCoefficientSlider.value);
-  var shininess : number = parseFloat(shininessSlider.value);
   var rotationSpeed : number = parseFloat(rotationSpeedSlider.value);
-
-  emittedRadianceSlider.oninput = function () {
-    emittedRadiance = parseFloat(emittedRadianceSlider.value);
-  }
-  ambientRadianceSlider.oninput = function () {
-    ambientRadiance = parseFloat(ambientRadianceSlider.value);
-  }
-  diffuseCoefficientSlider.oninput = function () {
-    diffuseCoefficient = parseFloat(diffuseCoefficientSlider.value);
-  }
-  specularCoefficientSlider.oninput = function () {
-    specularCoefficient = parseFloat(specularCoefficientSlider.value);
-  }
-  shininessSlider.oninput = function () {
-    shininess = parseFloat(shininessSlider.value);
-  }
   rotationSpeedSlider.oninput = function () {
     rotationSpeed = parseFloat(rotationSpeedSlider.value);
   }
@@ -54,9 +27,7 @@ const main= async() =>
   const obj = await readOBJFile('suzanne.obj', 1.0, false);
 
   const positions : Float32Array = obj.vertices;
-  const colors : Float32Array = obj.colors;
   const indices : Uint32Array = obj.indices;
-  const normals : Float32Array = obj.normals;
 
   const positionBuffer : GPUBuffer = device.createBuffer({
     label: "Positions",
@@ -75,40 +46,6 @@ const main= async() =>
     }],
   };
 
-  const colorBuffer : GPUBuffer = device.createBuffer({
-    label: "colors",
-    size: colors.byteLength,
-    usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST,
-  });
-
-  device.queue.writeBuffer(colorBuffer, 0, new Float32Array(colors));
-
-  const colorBufferLayout : GPUVertexBufferLayout = {
-    arrayStride: 4 * 4,
-    attributes: [{
-      format: "float32x4",
-      offset: 0,
-      shaderLocation: 1,
-    }],
-  };
-
-  const normalBuffer : GPUBuffer = device.createBuffer({
-    label: "Normals",
-    size: normals.byteLength,
-    usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST,
-  });
-
-  device.queue.writeBuffer(normalBuffer, 0, new Float32Array(normals));
-
-  const normalBufferLayout : GPUVertexBufferLayout = {
-    arrayStride: 4 * 4,
-    attributes: [{
-      format: "float32x4",
-      offset: 0,
-      shaderLocation: 1,
-    }],
-  };
-
   const indicesBuffer : GPUBuffer = device.createBuffer({
     label: "Indices",
     size: indices.byteLength,
@@ -118,7 +55,7 @@ const main= async() =>
   device.queue.writeBuffer(indicesBuffer, 0, new Uint32Array(indices));
 
   // matrix
-  const uniformBufferSize = (16 * 4) + (4 * 8);
+  const uniformBufferSize = (16 * 4);
   const uniformBuffer : GPUBuffer = device.createBuffer({
     label: 'uniforms',
     size: uniformBufferSize,
@@ -153,7 +90,7 @@ const main= async() =>
   const vertex : GPUVertexState = {
     module: wgsl,
     entryPoint: 'main_vs',
-    buffers: [positionBufferLayout, normalBufferLayout],
+    buffers: [positionBufferLayout],
   };
 
   const fragment : GPUFragmentState = {
@@ -212,8 +149,6 @@ const main= async() =>
       device.queue.writeBuffer(uniformBuffer, i * 16 * 4, new Float32Array(mvp[i]));
     }
 
-    device.queue.writeBuffer(uniformBuffer, mvp.length * 16 * 4, new Float32Array([...eye, emittedRadiance, ambientRadiance, diffuseCoefficient, specularCoefficient, shininess]));
-
     orbit += rotationSpeed;
 
     const descriptor : GPURenderPassDescriptor = {
@@ -221,7 +156,7 @@ const main= async() =>
         view: context.getCurrentTexture().createView(),
         loadOp: 'clear',
         storeOp: 'store',
-        clearValue: {r: 0.5, g: 0.5, b: 0.5, a: 1.0},
+        clearValue: {r: 0.5, g: 0.5, b: 0.8, a: 1.0},
       }],
       depthStencilAttachment: {
         view: depthTexture.createView(),
@@ -230,14 +165,13 @@ const main= async() =>
         depthStoreOp: 'store',
       },
     }
+
     const encoder : GPUCommandEncoder = device.createCommandEncoder();
     const pass : GPURenderPassEncoder = encoder.beginRenderPass(descriptor);
 
     pass.setPipeline(pipeline);
     pass.setIndexBuffer(indicesBuffer, 'uint32');
     pass.setVertexBuffer(0, positionBuffer);
-    pass.setVertexBuffer(1, colorBuffer);
-    pass.setVertexBuffer(2, normalBuffer);
 
     pass.setBindGroup(0, bindGroup);
     pass.drawIndexed(indices.length, mvp.length);
