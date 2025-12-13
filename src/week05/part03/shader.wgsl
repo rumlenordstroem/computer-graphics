@@ -15,7 +15,7 @@ fn main_vs(@location(0) position: vec4f, @builtin(instance_index) instance: u32)
     var output: VSOut;
 
     output.position = uni.matrix[instance] * position;
-    output.color = position;
+    output.color = 0.5 * position + 0.5;
 
     return output;
 }
