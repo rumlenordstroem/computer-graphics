@@ -104,7 +104,7 @@ const main= async() =>
   (document.getElementById("coarsen") as HTMLInputElement).onclick = coarsen;
   (document.getElementById("subdivide") as HTMLInputElement).onclick = subdivide;
 
-  const response = await fetch('earth.jpg');
+  const response = await fetch('../../textures/earth.jpg');
   const blob = await response.blob();
   const img : ImageBitmap = await createImageBitmap(blob, { colorSpaceConversion: 'none' });
 

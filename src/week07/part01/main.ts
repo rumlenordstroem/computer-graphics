@@ -105,12 +105,12 @@ const main= async() =>
   (document.getElementById("subdivide") as HTMLInputElement).onclick = subdivide;
 
   const cubemap : string[] = [
-    '../cm_left.png',
-    '../cm_right.png',
-    '../cm_top.png',
-    '../cm_bottom.png',
-    '../cm_back.png',
-    '../cm_front.png',
+    '../../textures/cm_left.png',
+    '../../textures/cm_right.png',
+    '../../textures/cm_top.png',
+    '../../textures/cm_bottom.png',
+    '../../textures/cm_back.png',
+    '../../textures/cm_front.png',
   ]
 
   var imgs : ImageBitmap[] = new Array(cubemap.length);

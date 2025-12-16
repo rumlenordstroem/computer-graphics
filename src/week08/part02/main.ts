@@ -211,7 +211,7 @@ const main= async() =>
     [1, 1, 1]
   )
 
-  const response = await fetch('../xamp23.png');
+  const response = await fetch('../../textures/xamp23.png');
   const blob = await response.blob();
   const img : ImageBitmap = await createImageBitmap(blob, { colorSpaceConversion: 'none' });
 

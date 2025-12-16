@@ -103,17 +103,17 @@ const main= async() =>
   (document.getElementById("coarsen") as HTMLInputElement).onclick = coarsen;
   (document.getElementById("subdivide") as HTMLInputElement).onclick = subdivide;
 
-  const response = await fetch('../normalmap.png');
+  const response = await fetch('../../textures/normalmap.png');
   const blob = await response.blob();
   const img : ImageBitmap = await createImageBitmap(blob, { colorSpaceConversion: 'none' });
 
   const cubemap : string[] = [
-    '../cm_left.png',
-    '../cm_right.png',
-    '../cm_top.png',
-    '../cm_bottom.png',
-    '../cm_back.png',
-    '../cm_front.png',
+    '../../textures/cm_left.png',
+    '../../textures/cm_right.png',
+    '../../textures/cm_top.png',
+    '../../textures/cm_bottom.png',
+    '../../textures/cm_back.png',
+    '../../textures/cm_front.png',
   ]
 
   var imgsQuad : ImageBitmap[] = new Array(cubemap.length);
