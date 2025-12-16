@@ -221,7 +221,6 @@ const main= async() =>
     usage: GPUTextureUsage.RENDER_ATTACHMENT,
   });
 
-  var orbit : number = 0.0;
   mat4.perspective(degToRad(90),aspect,0.1,100,projection);
   mat4.identity(model)
   mat4.translate(model, [0.0, 0.0, 0.0], model);
@@ -293,21 +292,54 @@ const main= async() =>
     ],
   });
 
+  const radius : number = 4.0;
+  let thetaX : number = 0.0;
+  let thetaY : number = 0.0;
+  let thetaDelta : number = 0.002;
+
+  let x0 : number = 0.0;
+  let y0 : number = 0.0;
+  let mouseDown : boolean = false;
+
+  canvas.addEventListener("mousedown", function (event) {
+      event.preventDefault();
+      x0 = event.clientX;
+      y0 = event.clientY;
+      mouseDown = true;
+  });
+
+  canvas.addEventListener("mousemove", function (event) {
+      event.preventDefault();
+      if (!mouseDown) return;
+      const dx = event.clientX - x0;
+      const dy = event.clientY - y0;
+      thetaX += dy * thetaDelta;
+      thetaY += dx * thetaDelta;
+      x0 = event.clientX;
+      y0 = event.clientY;
+
+      requestAnimationFrame(render);
+  });
+
+  canvas.addEventListener("mouseup", function (event) {
+      event.preventDefault();
+      mouseDown = false;
+  });
+
   // Create a render pass in a command buffer and submit it
   function render (){
-    const eye : number[] = [Math.sin(orbit) * 2.0, 0.0, Math.cos(orbit) * 2.0];
-
+    let eye : Float32Array = vec3.create(0, 0, radius);
     mat4.lookAt(eye,[0.0, 0.0, 0.0],[0.0, 1.0, 0.0], view);
+    mat4.rotateY(view, thetaY, view);
+    mat4.rotateX(view, thetaX, view);
     mat4.multiply(projection,view,mvp);
     mat4.multiply(mvp,model,mvp);
-    orbit += 0.01;
 
     device.queue.writeBuffer(positionBuffer, 0, new Float32Array(quadPositions));
     device.queue.writeBuffer(indicesBuffer, 0, new Uint32Array(quadIndices));
 
     device.queue.writeBuffer(positionBuffer, 4 * 3 * 4, new Float32Array(positions.map(p => [...p]).flat()));
     device.queue.writeBuffer(indicesBuffer, 4 * 6, new Uint32Array(indices));
-
 
     const textureQuad : Float32Array = new Float32Array(16);
     const inverseProjection : Float32Array = new Float32Array(16);
@@ -358,8 +390,6 @@ const main= async() =>
 
     pass.end();
     device.queue.submit([encoder.finish()]);
-
-    requestAnimationFrame(render);
   }
   requestAnimationFrame(render);
 }
