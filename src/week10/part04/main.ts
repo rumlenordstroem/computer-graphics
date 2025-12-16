@@ -313,6 +313,9 @@ const main= async() =>
   const dollyDelta : number = 0.01;
   const panningDelta : number = 0.01;
 
+  var spinning : boolean = false;
+  var mousePressedTime : number = 0;
+
   function mapEventCoordsToSphere(event : MouseEvent) : Float32Array {
     const rectangle = event.target.getBoundingClientRect();
     return vec3.normalize(orthographicHyperbolicMapping(2 * (event.clientX - rectangle.left) / canvas.width - 1, 2 * (canvas.height - event.clientY + rectangle.top - 1) / canvas.height - 1));
@@ -328,6 +331,7 @@ const main= async() =>
     switch(cameraSelect.value) {
       case "orbit": {
         u = mapEventCoordsToSphere(event);
+        mousePressedTime = Date.now();
         break;
       }
       case "dolly": {
@@ -377,11 +381,25 @@ const main= async() =>
         break;
       }
     }
-    requestAnimationFrame(render);
+    if (!spinning) {
+      requestAnimationFrame(render);
+    }
   });
 
   canvas.addEventListener("mouseup", function (event) : void {
     event.preventDefault();
+    switch(cameraSelect.value) {
+      case "orbit": {
+        const dt = Date.now() - mousePressedTime;
+        if (dt < 200) {
+          spinning = true;
+        }
+        break;
+      }
+      default: {
+        break;
+      }
+    }
     mouseDown = false;
   });
 
@@ -448,6 +466,10 @@ const main= async() =>
 
     pass.end();
     device.queue.submit([encoder.finish()]);
+
+    if (spinning) {
+      requestAnimationFrame(render);
+    }
   }
   requestAnimationFrame(render);
 }
