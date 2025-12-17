@@ -2,15 +2,24 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Project</title>
+  <title>Mandelbrot explorer</title>
   <script type="module" src="./main.ts"></script>
 </head>
 <body>
-  <canvas id="gpu-canvas" width="512" height="512">
-  </canvas>
+  <canvas id="gpu-canvas" width="512" height="512"></canvas>
   <div class="slidecontainer">
-    <p>Iterations:</p>
-    <input type="range" min="1" max="2048" value="256" step="1" class="slider" id="iterations">
+    <form>
+      Iterations:
+      <input type="range" name="iterationsSlider" min="2" max="2048" value="256" id="iterations" oninput="this.form.iterationsNumber.value=this.value" />
+      <input type="number" name="iterationsNumber" min="2" max="2048" value="256" oninput="this.form.iterationsSlider.value=this.value" />
+      Fractal type:
+      <select id="fractal-select">
+        <option value="mandelbrot_fs" selected>Mandelbrot</option>
+        <option value="burning_ship_fs">Burning ship</option>
+        <option value="tricorn_fs">Tricorn</option>
+        <option value="julia_fs">Julia</option>
+      </select>
+    </form>
   </div>
 </body>
 </html>

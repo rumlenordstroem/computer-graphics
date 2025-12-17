@@ -3,7 +3,7 @@ window.onload = function() { main(); }
 
 import shader from "./shader.wgsl?raw";
 
-const main= async() =>
+const main = async() =>
 {
   const adapter : GPUAdapter = <GPUAdapter> await navigator.gpu.requestAdapter();
   const device : GPUDevice = await adapter.requestDevice();
@@ -51,36 +51,42 @@ const main= async() =>
     code: shader
   });
 
-  const vertex : GPUVertexState = {
-    module: wgsl,
-    entryPoint: 'main_vs',
-    buffers: [vertexBufferLayout],
-  };
+  function setupPipeline(fragmentShader: string) : GPURenderPipeline {
+    const vertex : GPUVertexState = {
+      module: wgsl,
+      entryPoint: 'main_vs',
+      buffers: [vertexBufferLayout],
+    };
 
-  const fragment : GPUFragmentState = {
-    module: wgsl,
-    entryPoint: 'main_fs',
-    targets: [{
-      format: format
-    }],
-  };
+    const fragment : GPUFragmentState = {
+      module: wgsl,
+      entryPoint: fragmentShader,
+      targets: [{
+        format: format
+      }],
+    };
 
-  const pipeline : GPURenderPipeline = device.createRenderPipeline({
-    layout: 'auto',
-    vertex: vertex,
-    fragment: fragment,
-    primitive: {
-      topology: 'triangle-list',
-    },
-  })
+    return device.createRenderPipeline({
+      layout: 'auto',
+      vertex: vertex,
+      fragment: fragment,
+      primitive: {
+        topology: 'triangle-list',
+      },
+    })
 
-  const bindGroup = device.createBindGroup({
-    label: 'bind group for object',
-    layout: pipeline.getBindGroupLayout(0),
-    entries: [
-      { binding: 0, resource: { buffer: uniformBuffer }},
-    ],
-  });
+  }
+
+  function setupBindGroup(pipeline : GPURenderPipeline) : GPUBindGroup {
+    return device.createBindGroup({
+      label: 'Bind group for object',
+      layout: pipeline.getBindGroupLayout(0),
+      entries: [
+        { binding: 0, resource: { buffer: uniformBuffer }},
+      ],
+    });
+  }
+
 
   let dragging : boolean = false;
   let lastX : number = 0;
@@ -135,6 +141,18 @@ const main= async() =>
   const iterationsSlider : HTMLInputElement = <HTMLInputElement> document.getElementById('iterations');
   let iterations : number;
 
+  var pipeline : GPURenderPipeline = setupPipeline((document.getElementById("fractal-select") as HTMLInputElement).value);
+  var bindGroup : GPUBindGroup = setupBindGroup(pipeline);
+
+  (document.getElementById("fractal-select") as HTMLInputElement).onchange = function() {
+    pipeline = setupPipeline((document.getElementById("fractal-select") as HTMLInputElement).value);
+    bindGroup = setupBindGroup(pipeline);
+    lastX  = 0;
+    lastY  = 0;
+    centerX  = 0.0;
+    centerY  = 0.0;
+    zoom  = 4.0;
+  }
   // Create a render pass in a command buffer and submit it
   function render (){
     iterations = parseInt(iterationsSlider.value);
@@ -149,6 +167,7 @@ const main= async() =>
         clearValue: {r: 0.0, g: 0.0, b: 0.0, a: 1.0},
       }],
     }
+
     const encoder : GPUCommandEncoder = device.createCommandEncoder();
     const pass : GPURenderPassEncoder = encoder.beginRenderPass(descriptor);
 
@@ -158,7 +177,7 @@ const main= async() =>
     pass.draw(vertexData.length / 2);
     pass.end();
     device.queue.submit([encoder.finish()]);
-    let fps : number = 10;
+    let fps : number = 60;
     setTimeout(() => {
       requestAnimationFrame(render);
     }, 1000 / fps);

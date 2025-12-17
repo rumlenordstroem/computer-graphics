@@ -26,8 +26,46 @@ fn mulComplex(a: Complex, b: Complex) -> Complex {
     return Complex(a.x * b.x - a.y * b.y, a.x * b.y + a.y * b.x);
 }
 
-fn squareComplex(a: Complex) -> Complex {
-    return mulComplex(a, a);
+fn squareComplex(z: Complex) -> Complex {
+    let x = z.x;
+    let y = z.y;
+    return Complex(
+        x * x - y * y,
+        2.0 * x * y
+    );
+}
+
+fn abs2Complex(z: Complex) -> f32 {
+    return z.x * z.x + z.y * z.y;
+}
+
+fn divComplex(a: Complex, b: Complex) -> Complex {
+    let denom = b.x * b.x + b.y * b.y;
+    return Complex(
+        (a.x * b.x + a.y * b.y) / denom,
+        (a.y * b.x - a.x * b.y) / denom
+    );
+}
+
+fn divComplexSafe(a: Complex, b: Complex) -> Complex {
+    let denom = max(b.x * b.x + b.y * b.y, 1e-8); // Safe from div by 0
+    return Complex(
+        (a.x * b.x + a.y * b.y) / denom,
+        (a.y * b.x - a.x * b.y) / denom
+    );
+}
+
+fn divComplexFast(a: Complex, b: Complex) -> Complex {
+    let inv = 1.0 / (b.x * b.x + b.y * b.y);
+    return Complex(
+        (a.x * b.x + a.y * b.y) * inv,
+        (a.y * b.x - a.x * b.y) * inv
+    );
+}
+
+fn invComplex(z: Complex) -> Complex {
+    let inv = 1.0 / (z.x * z.x + z.y * z.y);
+    return Complex(z.x * inv, -z.y * inv);
 }
 
 struct Parameters {
@@ -40,28 +78,99 @@ struct Parameters {
 
 @group(0) @binding(0) var<uniform> params: Parameters;
 
-@fragment
-fn main_fs(input: VertexOutput) -> @location(0) vec4f
-{
-    let zoom = params.zoom;
-    let x = params.center.x;
-    let y = params.center.y;
-    let width = f32(params.width);
-    let heigth = f32(params.heigth);
-    let iterations = u32(params.iterations);
-    let c = Complex((input.position.x / width - 0.5) * zoom + x, (input.position.y / heigth - 0.5) * zoom + y);
+fn mandelbrot(z0: Complex) -> u32 {
+    let c = z0;
     var z = Complex(0.0, 0.0);
-    let maxIterations: u32 = 1000;
-    var i: u32 = 0;
-    for(; i < iterations; i++) {
+    var iterations: u32 = 0;
+    for(; iterations < params.iterations; iterations++) {
         z = squareComplex(z) + c;
-        if (length(z) > 2.0) {
+        if (abs2Complex(z) > 4.0) {
             break;
         }
     }
-    if(i == iterations) {
+    return iterations;
+}
+
+fn burning_ship(z0: Complex) -> u32 {
+    let c = z0;
+    var z = Complex(0.0, 0.0);
+    var iterations: u32 = 0;
+    for(; iterations < params.iterations; iterations++) {
+        z = Complex(abs(z.x), abs(z.y));
+        z = squareComplex(z) + c;
+        if (abs2Complex(z) > 4.0) {
+            break;
+        }
+    }
+    return iterations;
+}
+
+fn tricorn(z0: Complex) -> u32 {
+    let c = z0;
+    var z = Complex(0.0, 0.0);
+    var iterations: u32 = 0;
+    for(; iterations < params.iterations; iterations++) {
+        z = Complex(-z.x, z.y);
+        z = squareComplex(z) + c;
+        if (abs2Complex(z) > 4.0) {
+            break;
+        }
+    }
+    return iterations;
+}
+
+fn julia(z0: Complex, c: Complex) -> u32 {
+    var z = z0;
+    var iterations: u32 = 0;
+    for(; iterations < params.iterations; iterations++) {
+        z = squareComplex(z) + c;
+        if (abs2Complex(z) > 4.0) {
+            break;
+        }
+    }
+    return iterations;
+}
+
+@fragment
+fn mandelbrot_fs(input: VertexOutput) -> @location(0) vec4f {
+    let z = Complex((input.position.x / f32(params.width) - 0.5) * params.zoom + params.center.x, (input.position.y / f32(params.heigth) - 0.5) * params.zoom + params.center.y);
+    let iterations = mandelbrot(z);
+    if(iterations == params.iterations) {
         return vec4f(0.0, 0.0, 0.0, 1.0);
     } else {
-        return vec4f(hsv2rgb(vec3(f32(i) / f32(iterations), 1.0, 1.0)), 1.0);
+        return vec4f(hsv2rgb(vec3(f32(iterations) / f32(params.iterations), 1.0, 1.0)), 1.0);
+    }
+}
+
+@fragment
+fn burning_ship_fs(input: VertexOutput) -> @location(0) vec4f {
+    let z = Complex((input.position.x / f32(params.width) - 0.5) * params.zoom + params.center.x, (input.position.y / f32(params.heigth) - 0.5) * params.zoom + params.center.y);
+    let iterations = burning_ship(z);
+    if(iterations == params.iterations) {
+        return vec4f(0.0, 0.0, 0.0, 1.0);
+    } else {
+        return vec4f(hsv2rgb(vec3(f32(iterations) / f32(params.iterations), 1.0, 1.0)), 1.0);
+    }
+}
+
+@fragment
+fn tricorn_fs(input: VertexOutput) -> @location(0) vec4f {
+    let z = Complex((input.position.x / f32(params.width) - 0.5) * params.zoom + params.center.x, (input.position.y / f32(params.heigth) - 0.5) * params.zoom + params.center.y);
+    let iterations = tricorn(z);
+    if(iterations == params.iterations) {
+        return vec4f(0.0, 0.0, 0.0, 1.0);
+    } else {
+        return vec4f(hsv2rgb(vec3(f32(iterations) / f32(params.iterations), 1.0, 1.0)), 1.0);
+    }
+}
+
+@fragment
+fn julia_fs(input: VertexOutput) -> @location(0) vec4f {
+    let z = Complex((input.position.x / f32(params.width) - 0.5) * params.zoom, (input.position.y / f32(params.heigth) - 0.5) * params.zoom);
+    let iterations = julia(z, Complex(params.center.x, params.center.y));
+    if(iterations == params.iterations) {
+        return vec4f(0.0, 0.0, 0.0, 1.0);
+    } else {
+        return vec4f(hsv2rgb(vec3(f32(iterations) / f32(params.iterations), 1.0, 1.0)), 1.0);
     }
 }
