@@ -148,7 +148,7 @@ const main= async() =>
       // Circle
       case '2': {
         if (circleOriginBuffer.length == 2) {
-          const n = 20;
+          const n = 30;
           const radius : number = Math.sqrt(((circleOriginBuffer[0] - x)*(circleOriginBuffer[0] - x)) + ((circleOriginBuffer[1] - y)*(circleOriginBuffer[1] - y)));
           const circle: number[] = drawCircle(radius, circleOriginBuffer[0], circleOriginBuffer[1], n);
           const colors : number[] = colorCircle(rgb[0],rgb[1],rgb[2],rgb[3], n);
