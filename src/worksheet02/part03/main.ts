@@ -40,6 +40,7 @@ const main= async() =>
 
   (document.getElementById("clear-button") as HTMLInputElement).onclick = function () {
     bufferIndex = 0;
+    triangleBufferIndex = 0;
     requestAnimationFrame(render);
   };
 

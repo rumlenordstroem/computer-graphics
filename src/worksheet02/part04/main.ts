@@ -37,14 +37,17 @@ const main= async() =>
 
   let triangleBufferIndex : number = 0;
   let triangleBuffer : number[] = Array(6);
-
   let circleOriginBuffer : number[] = [];
 
-  <HTMLInputElement> document.getElementById("clear-button").onclick = function () {
+  (document.getElementById("clear-button") as HTMLInputElement).onclick = function () {
     bufferIndex = 0;
     triangleBufferIndex = 0;
     circleOriginBuffer = [];
-    requestAnimationFrame(clear);
+    requestAnimationFrame(render);
+  };
+
+  (document.getElementById("clear-select") as HTMLInputElement).onchange = function () {
+    requestAnimationFrame(render);
   };
 
   const vertexBuffer : GPUBuffer = device.createBuffer({
@@ -121,7 +124,6 @@ const main= async() =>
         requestAnimationFrame(render);
         break; 
       }
-
       // Triangle
       case '1': { 
         triangleBuffer[triangleBufferIndex] = x;
@@ -138,7 +140,6 @@ const main= async() =>
         }
         break; 
       }
-
       // Circle
       case '2': {
         if (circleOriginBuffer.length == 2) {
@@ -156,30 +157,12 @@ const main= async() =>
           circleOriginBuffer.push(y);
         }
         break; 
-        
       }
-
       default: { 
         break; 
       } 
     }
   });
-
-  function clear () {
-    const descriptor : GPURenderPassDescriptor = {
-      colorAttachments: [{
-        view: context.getCurrentTexture().createView(),
-        loadOp: 'clear',
-        storeOp: 'store',
-        clearValue: colorLookup[parseInt(clearSelect.value)],
-      }],
-    }
-    const encoder : GPUCommandEncoder = device.createCommandEncoder();
-    const pass : GPURenderPassEncoder = encoder.beginRenderPass(descriptor);
-
-    pass.end();
-    device.queue.submit([encoder.finish()]);
-  }
 
   // Create a render pass in a command buffer and submit it
   function render (){
@@ -202,5 +185,5 @@ const main= async() =>
     pass.end();
     device.queue.submit([encoder.finish()]);
   }
-  clear();
+  render();
 }
