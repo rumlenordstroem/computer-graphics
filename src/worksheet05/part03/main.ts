@@ -2,8 +2,9 @@
 window.onload = function() { main(); }
 
 import shader from "./shader.wgsl?raw";
-import { mat4, vec3 } from 'wgpu-matrix';
+import { mat4 } from 'wgpu-matrix';
 import { readOBJFile } from "../../common/OBJParser";
+import { degToRad } from "../../common/utils";
 
 const main= async() =>
 {
@@ -62,8 +63,6 @@ const main= async() =>
     usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
   });
 
-  const degToRad  = (d : number) : number => d * Math.PI / 180;
-
   const projections : Float32Array[] = [
     new Float32Array(16),
   ];
@@ -117,14 +116,14 @@ const main= async() =>
     },
   })
 
-  const depthTexture = device.createTexture({
+  const depthTexture : GPUTexture = device.createTexture({
     size: { width: canvas.width, height: canvas.height, },
     format: 'depth24plus',
     sampleCount: 1,
     usage: GPUTextureUsage.RENDER_ATTACHMENT,
   });
 
-  const bindGroup = device.createBindGroup({
+  const bindGroup : GPUBindGroup = device.createBindGroup({
     label: 'bind group for object',
     layout: pipeline.getBindGroupLayout(0),
     entries: [
