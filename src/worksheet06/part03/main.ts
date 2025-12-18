@@ -3,7 +3,6 @@ window.onload = function() { main(); }
 
 import shader from "./shader.wgsl?raw";
 import { mat4, vec3 } from 'wgpu-matrix';
-import { generateMipmap } from "../../common/genmipmap";
 import { subdivideIndices, subdivideSphere, coarsenIndices, degToRad } from "../../common/utils";
 
 const main= async() =>
@@ -182,11 +181,9 @@ const main= async() =>
     addressModeU: "repeat",
     addressModeV: "repeat",
     minFilter: "linear",
-    magFilter: "linear",
-    mipmapFilter: "linear"
+    magFilter: "nearest",
+    mipmapFilter: "nearest"
   });
-
-  generateMipmap(device, texture);
 
   const bindGroup : GPUBindGroup = device.createBindGroup({
     label: 'bind group for object',
