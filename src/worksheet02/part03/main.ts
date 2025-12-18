@@ -2,7 +2,7 @@
 window.onload = function() { main(); }
 
 import shader from "./shader.wgsl?raw";
-import { colorRectangle, drawRectangle, drawCircle, colorCircle } from "../../common/utils";
+import { colorRectangle, drawRectangle } from "../../common/utils";
 
 const main= async() =>
 {
@@ -38,9 +38,13 @@ const main= async() =>
   let triangleBufferIndex : number = 0;
   let triangleBuffer : number[] = Array(6);
 
-  <HTMLInputElement> document.getElementById("clear-button").onclick = function () {
+  (document.getElementById("clear-button") as HTMLInputElement).onclick = function () {
     bufferIndex = 0;
-    requestAnimationFrame(clear);
+    requestAnimationFrame(render);
+  };
+
+  (document.getElementById("clear-select") as HTMLInputElement).onchange = function () {
+    requestAnimationFrame(render);
   };
 
   const vertexBuffer : GPUBuffer = device.createBuffer({
@@ -141,25 +145,8 @@ const main= async() =>
     }
   });
 
-  function clear () {
-    const descriptor : GPURenderPassDescriptor = {
-      colorAttachments: [{
-        view: context.getCurrentTexture().createView(),
-        loadOp: 'clear',
-        storeOp: 'store',
-        clearValue: colorLookup[parseInt(clearSelect.value)],
-      }],
-    }
-    const encoder : GPUCommandEncoder = device.createCommandEncoder();
-    const pass : GPURenderPassEncoder = encoder.beginRenderPass(descriptor);
-
-    pass.end();
-    device.queue.submit([encoder.finish()]);
-  }
-
   // Create a render pass in a command buffer and submit it
   function render (){
-
     const descriptor : GPURenderPassDescriptor = {
       colorAttachments: [{
         view: context.getCurrentTexture().createView(),
@@ -178,5 +165,5 @@ const main= async() =>
     pass.end();
     device.queue.submit([encoder.finish()]);
   }
-  clear();
+  render();
 }
