@@ -93,11 +93,6 @@ const main= async() =>
 
   // Create a render pass in a command buffer and submit it
   function render (){
-
-    // for (let i = 0; i < array.length; i++) {
-    //   vertices[i] = array[i];
-    // }
-
     if (vertices.length > 0) {
       device.queue.writeBuffer(vertexBuffer, 0, new Float32Array(vertices));
     }
