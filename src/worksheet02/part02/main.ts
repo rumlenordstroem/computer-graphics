@@ -21,8 +21,6 @@ const main= async() =>
   const bytesPerVerticeEntry : number = 8;
   const bytesPerColorEntry : number = 12;
   var bufferIndex : number = 0;
-  let vertices: number[] = [];
-  let colors: number[] = [];
   const colorSelect : HTMLInputElement = <HTMLInputElement> document.getElementById("color-select");
   const clearSelect: HTMLInputElement = <HTMLInputElement> document.getElementById("clear-select");
   const colorLookup : number[][] = [
@@ -36,11 +34,13 @@ const main= async() =>
     [0.3921, 0.5843, 0.9294, 1.0] // Cornflower
   ];
 
-  <HTMLInputElement> document.getElementById("clear-button").onclick = function () {
-    vertices = [];
-    colors = [];
+  (document.getElementById("clear-button") as HTMLInputElement).onclick = function () {
     bufferIndex = 0;
-    requestAnimationFrame(clear);
+    requestAnimationFrame(render);
+  };
+
+  (document.getElementById("clear-select") as HTMLInputElement).onchange = function () {
+    requestAnimationFrame(render);
   };
 
   const vertexBuffer : GPUBuffer = device.createBuffer({
@@ -65,9 +65,9 @@ const main= async() =>
   });
 
   const colorsBufferLayout : GPUVertexBufferLayout = {
-    arrayStride: 12,
+    arrayStride: 16,
     attributes: [{
-      format: "float32x3",
+      format: "float32x4",
       offset: 0,
       shaderLocation: 1,
     }],
@@ -105,42 +105,23 @@ const main= async() =>
     var rect = ev.target.getBoundingClientRect();
     const x : number = 2 * (ev.clientX - rect.left) / canvas.width - 1;
     const y : number = 2 * (canvas.height - ev.clientY + rect.top - 1) / canvas.height - 1;
-    vertices.push(...drawRectangle(x, y, x + 0.020, y + 0.020));
-    colors.push(...colorRectangle(colorLookup[colorSelect.value][0], colorLookup[colorSelect.value][1], colorLookup[colorSelect.value][2]))
+    const rgb : number [] = colorLookup[parseInt(colorSelect.value)];
+    const point : number[] = drawRectangle(x, y, x + 0.020, y + 0.020);
+    const colors : number[] = colorRectangle(rgb[0],rgb[1],rgb[2],rgb[3]);
+    device.queue.writeBuffer(vertexBuffer, bufferIndex * 8, new Float32Array(point));
+    device.queue.writeBuffer(colorsBuffer, bufferIndex * 16, new Float32Array(colors));
+    bufferIndex += 6;
     requestAnimationFrame(render);
-    bufferIndex = bufferIndex + 6;
   });
-
-  function clear () {
-    const descriptor : GPURenderPassDescriptor = {
-      colorAttachments: [{
-        view: context.getCurrentTexture().createView(),
-        loadOp: 'clear',
-        storeOp: 'store',
-        clearValue: colorLookup[clearSelect.value],
-      }],
-    }
-    const encoder : GPUCommandEncoder = device.createCommandEncoder();
-    const pass : GPURenderPassEncoder = encoder.beginRenderPass(descriptor);
-
-    pass.end();
-    device.queue.submit([encoder.finish()]);
-  }
 
   // Create a render pass in a command buffer and submit it
   function render (){
-
-    if (vertices.length > 0) {
-      device.queue.writeBuffer(vertexBuffer, 0, new Float32Array(vertices));
-      device.queue.writeBuffer(colorsBuffer, 0, new Float32Array(colors));
-    }
-
     const descriptor : GPURenderPassDescriptor = {
       colorAttachments: [{
         view: context.getCurrentTexture().createView(),
         loadOp: 'clear',
         storeOp: 'store',
-        clearValue: colorLookup[clearSelect.value],
+        clearValue: colorLookup[parseInt(clearSelect.value)],
       }],
     }
     const encoder : GPUCommandEncoder = device.createCommandEncoder();
@@ -153,5 +134,5 @@ const main= async() =>
     pass.end();
     device.queue.submit([encoder.finish()]);
   }
-  clear();
+  render();
 }
