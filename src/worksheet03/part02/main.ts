@@ -28,7 +28,7 @@ const main= async() =>
     [1.0, 0.0, 0.0],
   ];
 
-  var wireIndices : Uint32Array = new Uint32Array([
+  var indices : Uint32Array = new Uint32Array([
     0, 1, 1, 2, 2, 3, 3, 0, // front
     2, 3, 3, 7, 7, 6, 6, 2, // right
     0, 3, 3, 7, 7, 4, 4, 0, // down
@@ -58,11 +58,11 @@ const main= async() =>
 
   const indicesBuffer : GPUBuffer = device.createBuffer({
     label: "Indices",
-    size: wireIndices.byteLength,
+    size: indices.byteLength,
     usage: GPUBufferUsage.INDEX | GPUBufferUsage.COPY_DST,
   });
 
-  device.queue.writeBuffer(indicesBuffer, 0, new Uint32Array(wireIndices));
+  device.queue.writeBuffer(indicesBuffer, 0, new Uint32Array(indices));
 
   const colorsBuffer : GPUBuffer = device.createBuffer({
     label: "Cell colors",
@@ -205,7 +205,7 @@ const main= async() =>
     pass.setVertexBuffer(1, colorsBuffer);
 
     pass.setBindGroup(0, bindGroup);
-    pass.drawIndexed(wireIndices.length, mvp.length);
+    pass.drawIndexed(indices.length, mvp.length);
     pass.end();
     device.queue.submit([encoder.finish()]);
 
