@@ -2,8 +2,8 @@
 window.onload = function() { main(); }
 
 import shader from "./shader.wgsl?raw";
-import { mat4, vec3 } from 'wgpu-matrix';
-import { readOBJFile } from "../../common/OBJParser";
+import { mat4 } from 'wgpu-matrix';
+import { degToRad } from "../../common/utils";
 
 const main= async() =>
 {
@@ -127,8 +127,6 @@ const main= async() =>
     usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
   });
 
-  const degToRad  = (d : number) : number => d * Math.PI / 180;
-
   const projections : Float32Array[] = [
     new Float32Array(16),
   ];
@@ -145,7 +143,7 @@ const main= async() =>
     new Float32Array(16),
   ];
 
-  const aspect = canvas.clientWidth / canvas.clientHeight;
+  const aspect : number = canvas.clientWidth / canvas.clientHeight;
 
   const wgsl : GPUShaderModule = device.createShaderModule({
     label: "Cell shader",
@@ -182,14 +180,14 @@ const main= async() =>
     },
   })
 
-  const depthTexture = device.createTexture({
+  const depthTexture : GPUTexture = device.createTexture({
     size: { width: canvas.width, height: canvas.height, },
     format: 'depth24plus',
     sampleCount: 1,
     usage: GPUTextureUsage.RENDER_ATTACHMENT,
   });
 
-  const bindGroup = device.createBindGroup({
+  const bindGroup : GPUBindGroup = device.createBindGroup({
     label: 'bind group for object',
     layout: pipeline.getBindGroupLayout(0),
     entries: [
@@ -199,9 +197,9 @@ const main= async() =>
     ],
   });
 
-  const eye    = [0.0, 0.0, 0.0];
-  const target = [0.0, 0.0, -1.0];
-  const up     = [0.0, 1.0, 0.0];
+  const eye : number[]    = [0.0, 0.0, 0.0];
+  const target : number[] = [0.0, 0.0, -1.0];
+  const up : number[]     = [0.0, 1.0, 0.0];
 
   mat4.perspective(degToRad(90),aspect,0.1,100,projections[0]);
   mat4.identity(models[0])

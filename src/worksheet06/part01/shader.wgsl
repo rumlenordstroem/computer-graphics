@@ -26,4 +26,4 @@ fn main_vs(@location(0) position: vec4f, @location(1) textureCoordinate: vec2f, 
 fn main_fs(@location(0) textureCoordinates: vec2f) -> @location(0) vec4f
 {
     return textureSample(texture, samp, textureCoordinates);
-} 
+}

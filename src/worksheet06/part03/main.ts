@@ -93,7 +93,7 @@ const main= async() =>
   });
 
   // matrix
-  const uniformBufferSize = 16 * 4;
+  const uniformBufferSize : number = 16 * 4;
   const uniformBuffer : GPUBuffer = device.createBuffer({
     label: 'uniforms',
     size: uniformBufferSize,
@@ -116,7 +116,7 @@ const main= async() =>
     new Float32Array(16),
   ];
 
-  const aspect = canvas.clientWidth / canvas.clientHeight;
+  const aspect : number = canvas.clientWidth / canvas.clientHeight;
 
   const wgsl : GPUShaderModule = device.createShaderModule({
     label: "Cell shader",
@@ -166,7 +166,7 @@ const main= async() =>
   mat4.identity(models[0])
   mat4.translate(models[0], [0.0, 0.0, 0.0], models[0]);
 
-  const texture = device.createTexture({
+  const texture : GPUTexture = device.createTexture({
     size: [img.width, img.height, 1],
     format: 'rgba8unorm',
     usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.RENDER_ATTACHMENT,

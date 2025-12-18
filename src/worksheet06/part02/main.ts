@@ -3,6 +3,7 @@ window.onload = function() { main(); }
 
 import shader from "./shader.wgsl?raw";
 import { mat4 } from 'wgpu-matrix';
+import { degToRad } from "../../common/utils";
 import { generateMipmap, numMipLevels } from "../../common/genmipmap";
 
 const main= async() =>
@@ -128,14 +129,12 @@ const main= async() =>
   };
 
   // matrix
-  const uniformBufferSize = (16 * 4);
+  const uniformBufferSize : number = (16 * 4);
   const uniformBuffer : GPUBuffer = device.createBuffer({
     label: 'uniforms',
     size: uniformBufferSize,
     usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
   });
-
-  const degToRad  = (d : number) : number => d * Math.PI / 180;
 
   const projections : Float32Array[] = [
     new Float32Array(16),
@@ -153,7 +152,7 @@ const main= async() =>
     new Float32Array(16),
   ];
 
-  const aspect = canvas.clientWidth / canvas.clientHeight;
+  const aspect : number = canvas.clientWidth / canvas.clientHeight;
 
   const wgsl : GPUShaderModule = device.createShaderModule({
     label: "Cell shader",
@@ -190,7 +189,7 @@ const main= async() =>
     },
   })
 
-  const depthTexture = device.createTexture({
+  const depthTexture : GPUTexture = device.createTexture({
     size: { width: canvas.width, height: canvas.height, },
     format: 'depth24plus',
     sampleCount: 1,
@@ -245,7 +244,7 @@ const main= async() =>
       mipmapFilter: <GPUFilterMode> mipmapFilteringMode,
     });
 
-    const bindGroup = device.createBindGroup({
+    const bindGroup : GPUBindGroup = device.createBindGroup({
       label: 'bind group for object',
       layout: pipeline.getBindGroupLayout(0),
       entries: [
