@@ -138,7 +138,7 @@ const main= async() =>
     offset = offset + 0.02;
 
     device.queue.writeBuffer(uniformBuffer, 0, new Float32Array([Math.cos(offset), 0.0, 0.0, 0.0]))
-    device.queue.writeBuffer(vertexBuffer, 0, vertices);
+    device.queue.writeBuffer(vertexBuffer, 0, new Float32Array(vertices));
 
     const descriptor : GPURenderPassDescriptor = {
       colorAttachments: [{
