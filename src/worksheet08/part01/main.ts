@@ -3,6 +3,7 @@ window.onload = function() { main(); }
 
 import shader from "./shader.wgsl?raw";
 import { mat4, vec3, vec2 } from 'wgpu-matrix';
+import { degToRad } from "../../common/utils";
 
 const main= async() =>
 {
@@ -107,8 +108,6 @@ const main= async() =>
     size: uniformBufferSize,
     usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
   });
-
-  const degToRad  = (d : number) : number => d * Math.PI / 180;
 
   const wgsl : GPUShaderModule = device.createShaderModule({
     label: "Cell shader",
