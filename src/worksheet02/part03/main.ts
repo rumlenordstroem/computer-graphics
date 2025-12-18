@@ -129,17 +129,21 @@ const main= async() =>
         triangleBuffer[triangleBufferIndex + 1] = y;
         if (triangleBufferIndex == 4) {
           const colors : number[] = Array(3).fill(rgb).flat();
-          device.queue.writeBuffer(vertexBuffer, bufferIndex * 8, new Float32Array(triangleBuffer));
-          device.queue.writeBuffer(colorsBuffer, bufferIndex * 16, new Float32Array(colors));
-          bufferIndex += 3;
+          device.queue.writeBuffer(vertexBuffer, (bufferIndex - 12) * 8, new Float32Array(triangleBuffer));
+          device.queue.writeBuffer(colorsBuffer, (bufferIndex - 12) * 16, new Float32Array(colors));
+          bufferIndex += 3 - 12;
           triangleBufferIndex = 0;
-          requestAnimationFrame(render);
         } else {
+          const point : number[] = drawRectangle(x, y, x + 0.020, y + 0.020);
+          const colors : number[] = colorRectangle(rgb[0],rgb[1],rgb[2],rgb[3]);
+          device.queue.writeBuffer(vertexBuffer, bufferIndex * 8, new Float32Array(point));
+          device.queue.writeBuffer(colorsBuffer, bufferIndex * 16, new Float32Array(colors));
+          bufferIndex += 6;
           triangleBufferIndex += 2;
         }
+        requestAnimationFrame(render);
         break; 
       }
-
       default: { 
         break; 
       } 
@@ -166,5 +170,5 @@ const main= async() =>
     pass.end();
     device.queue.submit([encoder.finish()]);
   }
-  render();
+  requestAnimationFrame(render);
 }

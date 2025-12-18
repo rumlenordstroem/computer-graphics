@@ -134,5 +134,5 @@ const main= async() =>
     pass.end();
     device.queue.submit([encoder.finish()]);
   }
-  render();
+  requestAnimationFrame(render);
 }
