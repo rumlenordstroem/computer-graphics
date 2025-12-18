@@ -26,9 +26,5 @@ fn main_vs(@location(0) position: vec4f, @location(1) textureCoordinates : vec2f
 @fragment
 fn main_fs(@location(0) textureCoordinates : vec2f) -> @location(0) vec4f
 {
-    // return textureSample(texture, samp, textureCoordinates);
-    // return textureSample(texture, samp, textureCoordinates) * vec4f(uni.shadow, uni.shadow, uni.shadow, 1.0);
-    let color = textureSample(texture, samp, textureCoordinates);
-    return vec4f(color.rgb * uni.shadow, 1.0);
-
+    return textureSample(texture, samp, textureCoordinates) * uni.shadow;
 } 

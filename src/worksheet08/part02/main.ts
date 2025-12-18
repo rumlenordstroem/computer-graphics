@@ -4,40 +4,6 @@ window.onload = function() { main(); }
 import shader from "./shader.wgsl?raw";
 import { mat4, vec3, vec2 } from 'wgpu-matrix';
 
-function makeShadowMatrix(
-  lightPos,
-  planeNormal,
-  planeD: number,
-  out = mat4.create()
-) {
-  const [lx, ly, lz] = lightPos;
-  const [nx, ny, nz] = planeNormal;
-
-  const dot = nx * lx + ny * ly + nz * lz + planeD;
-
-  out[0]  = dot - lx * nx;
-  out[1]  = -lx * ny;
-  out[2]  = -lx * nz;
-  out[3]  = -lx * planeD;
-
-  out[4]  = -ly * nx;
-  out[5]  = dot - ly * ny;
-  out[6]  = -ly * nz;
-  out[7]  = -ly * planeD;
-
-  out[8]  = -lz * nx;
-  out[9]  = -lz * ny;
-  out[10] = dot - lz * nz;
-  out[11] = -lz * planeD;
-
-  out[12] = -nx;
-  out[13] = -ny;
-  out[14] = -nz;
-  out[15] = dot;
-
-  return out;
-}
-
 const main= async() =>
 {
   const adapter : GPUAdapter = <GPUAdapter> await navigator.gpu.requestAdapter();
@@ -201,7 +167,7 @@ const main= async() =>
   const texture : GPUTexture = device.createTexture({
     size: [1, 1, 1],
     format: 'rgba8unorm',
-    usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.RENDER_ATTACHMENT,
+    usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING,
   });
 
   device.queue.writeTexture(
@@ -229,11 +195,10 @@ const main= async() =>
   );
 
   const sampler : GPUSampler = device.createSampler({
-    addressModeU: "repeat",
-    addressModeV: "repeat",
-    minFilter: "linear",
-    magFilter: "linear",
-    mipmapFilter: "linear"
+    addressModeU: 'clamp-to-edge',
+    addressModeV: 'clamp-to-edge',
+    minFilter: 'nearest',
+    magFilter: 'linear',
   });
 
   const bindGroup : GPUBindGroup = device.createBindGroup({
@@ -291,75 +256,28 @@ const main= async() =>
   device.queue.writeBuffer(uniformBuffer, 0, new Float32Array(mvp));
   device.queue.writeBuffer(uniformBuffer, mvp.byteLength, new Float32Array([1.0]));
 
-  var angle = 0.0;
-
-  const shadowMat   = mat4.create();
-  const shadowMVP   = mat4.create();
-  const temp        = mat4.create();
-  const shadowMVP_T = mat4.create(); // transposed
-
+  let angle = 0;
   // Create a render pass in a command buffer and submit it
   function render (){
     // Shadow uniform buffer
-    // const epsilon = 0.0001;
-    // const r = 2.0;
-    // const l = vec3.create(r * Math.sin(angle), 2, -2 + r * Math.cos(angle));
-    // const n = vec3.create(0, 1, 0);
-    // const d = 1.0 - epsilon;
+    const epsilon = 0.001;
+    const r = 2.0;
+    const l : Float32Array = vec3.create(r * Math.sin(angle), 2, -2 + r * Math.cos(angle));
+    const n : Float32Array = vec3.create(0, 1, 0);
+    const d : number = 1.0 - epsilon;
 
-    // console.log(l);
-    // console.log(n);
+    const a : number = d + vec3.dot(n, l);
+    const modelShadow = mat4.create(
+      a - l[0] * n[0], -l[0] * n[1], -l[0] * n[2], -l[0] * d,
+      -l[1] * n[0], a - l[1] * n[1], -l[1] * n[2], -l[1] * d,
+      -l[2] * n[0], -l[2] * n[1], a - l[2] * n[2], -l[2] * d,
+      -n[0], -n[1], -n[2], a - d
+    );
 
-    // const a = d + vec3.dot(n, l);
-    // console.log(a);
-    // const Mshadow = mat4.create(
-    //     a - l[0] * n[0], -l[0] * n[1], -l[0] * n[2], -l[0] * d,
-    //     -l[1] * n[0], a - l[1] * n[1], -l[1] * n[2], -l[1] * d,
-    //     -l[2] * n[0], -l[2] * n[1], a - l[2] * n[2], -l[2] * d,
-    //     -n[0], -n[1], -n[2], a - d
-    // );
+    const mvpShadow = mat4.mul(projection, mat4.mul(view, modelShadow));
 
-    // const temp = mat4.create();
-    // const mvpShadow = mat4.create();
-
-    // mat4.multiply(view, Mshadow, temp);
-    // mat4.multiply(projection, temp, mvpShadow);
-    // // mat4.transpose(mvpShadow, mvpShadow);
-
-    // device.queue.writeBuffer(uniformBufferShadow, 0, new Float32Array(mvpShadow));
-    // device.queue.writeBuffer(uniformBufferShadow, mvpShadow.byteLength, new Float32Array([0.0]));
-
-const epsilon = 0.0001;
-const r = 2.0;
-
-// Light position
-const lightPos = vec3.create(
-  r * Math.sin(angle),
-  2.0,
-  r * Math.cos(angle)
-);
-
-// Ground plane: y = -1  →  normal = (0,1,0), d = 1
-const planeNormal = vec3.create(0, 1, 0);
-const planeD = 1.0 - epsilon;
-
-// Build shadow projection
-makeShadowMatrix(lightPos, planeNormal, planeD, shadowMat);
-
-// MVP = Projection × View × Shadow
-mat4.multiply(view, shadowMat, temp);
-mat4.multiply(projection, temp, shadowMVP);
-
-// Transpose for WGSL
-mat4.transpose(shadowMVP, shadowMVP_T);
-
-// Upload
-device.queue.writeBuffer(uniformBufferShadow, 0, shadowMVP_T);
-device.queue.writeBuffer(
-  uniformBufferShadow,
-  shadowMVP.byteLength,
-  new Float32Array([0.0]) // shadow visibility
-);
+    device.queue.writeBuffer(uniformBufferShadow, 0, new Float32Array(mvpShadow));
+    device.queue.writeBuffer(uniformBufferShadow, 64, new Float32Array([0.0, 0.0, 0.0, 0.0]));
 
     angle += 0.01;
 
@@ -369,7 +287,7 @@ device.queue.writeBuffer(
         resolveTarget: context.getCurrentTexture().createView(),
         loadOp: 'clear',
         storeOp: 'store',
-        clearValue: {r: 1.0, g: 1.0, b: 1.0, a: 1.0},
+        clearValue: {r: 0.3921, g: 0.5843, b: 0.9294, a: 1.0},
       }],
       depthStencilAttachment: {
         view: depthTexture.createView(),
