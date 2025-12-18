@@ -3,44 +3,7 @@ window.onload = function() { main(); }
 
 import shader from "./shader.wgsl?raw";
 import { mat4, vec3 } from 'wgpu-matrix';
-
-function subdivideSphere(positions : Float32Array[], indices : Uint32Array) : Uint32Array {
-  const triangles : number = indices.length / 3;
-  let newIndices : number[] = [];
-  for (let i : number = 0; i < triangles; i++) {
-    const i0 : number = indices[i * 3 + 0]
-    const i1 : number = indices[i * 3 + 1]
-    const i2 : number = indices[i * 3 + 2]
-    const c01 : number = positions.length;
-    const c12 : number = positions.length + 1;
-    const c20 : number = positions.length + 2;
-    positions.push(vec3.normalize(vec3.add(positions[i0], positions[i1])))
-    positions.push(vec3.normalize(vec3.add(positions[i1], positions[i2])))
-    positions.push(vec3.normalize(vec3.add(positions[i2], positions[i0])))
-    newIndices.push(i0, c01, c20, c20, c01, c12, c12, c01, i1, c20, c12, i2);
-  }
-  return new Uint32Array(newIndices);
-}
-
-function subdivideIndices(indices : Uint32Array) : Uint32Array {
-  const triangles : number = indices.length / 3;
-  let newIndices : number[] = [];
-  for (let i : number = 0; i < triangles; i++) {
-    const c01 : number = triangles + i * 3 + 0;
-    const c12 : number = triangles + i * 3 + 1;
-    const c20 : number = triangles + i * 3 + 2;
-    newIndices.push(indices[i * 3 + 0], c01, c20, c20, c01, c12, c12, c01, indices[i * 3 + 1], c20, c12, indices[i * 3 + 2]);
-  }
-  return new Uint32Array(newIndices);
-}
-
-function coarsenIndices(indices : Uint32Array) : Uint32Array {
-  let newIndices : number[] = [];
-  for (let i : number = 0; i < indices.length / 12; i++) {
-    newIndices.push(indices[i * 12 + 0], indices[i * 12 + 8], indices[i * 12 + 11]);
-  }
-  return new Uint32Array(newIndices);
-}
+import { subdivideIndices, subdivideSphere, coarsenIndices, degToRad } from "../../common/utils";
 
 const main= async() =>
 {
@@ -127,10 +90,6 @@ const main= async() =>
     usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
   });
 
-  const uniformValues = new Float32Array(uniformBufferSize / 4);
-
-  const degToRad  = d => d * Math.PI / 180;
-
   const projections : Float32Array[] = [
     new Float32Array(16),
   ];
@@ -147,7 +106,7 @@ const main= async() =>
     new Float32Array(16),
   ];
 
-  const aspect = canvas.clientWidth / canvas.clientHeight;
+  const aspect : number = canvas.clientWidth / canvas.clientHeight;
 
   const wgsl : GPUShaderModule = device.createShaderModule({
     label: "Cell shader",
@@ -184,14 +143,14 @@ const main= async() =>
     },
   })
 
-  const depthTexture = device.createTexture({
+  const depthTexture : GPUTexture = device.createTexture({
     size: { width: canvas.width, height: canvas.height, },
     format: 'depth24plus',
     sampleCount: 1,
     usage: GPUTextureUsage.RENDER_ATTACHMENT,
   });
 
-  const bindGroup = device.createBindGroup({
+  const bindGroup : GPUBindGroup = device.createBindGroup({
     label: 'bind group for object',
     layout: pipeline.getBindGroupLayout(0),
     entries: [
