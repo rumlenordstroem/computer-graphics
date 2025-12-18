@@ -429,6 +429,7 @@ const main= async() =>
     device.queue.submit([encoder.finish()]);
 
     if (spinning) {
+      quat.multiply(quatRot, quatInc, quatRot);
       requestAnimationFrame(render);
     }
   }
